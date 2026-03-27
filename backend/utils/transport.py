@@ -67,21 +67,6 @@ def calculate_results(distance_km: float) -> list:
         cost_inr = round(distance_km * data["cost_per_km"], 2)
         co2_kg = round(distance_km * data["emission_per_km"], 3)
         
-        # Dynamic scoring logic: 
-        # Base score is the mode's static eco_score
-        dynamic_score = float(data["eco_score"])
-        
-        # Punish slow modes (walk/cycle) heavily for long distances (>5km)
-        if time_min > 60:
-            # subtract points for every minute over an hour
-            dynamic_score -= (time_min - 60) * 0.5 
-            
-        # Hard cap for walk/cycle if it takes more than 2 hours
-        if time_min > 120 and mode in ["walk", "cycle"]:
-            dynamic_score -= 50
-            
-        dynamic_score = max(0, min(100, int(dynamic_score)))
-
         results.append(
             {
                 "transport_mode": mode,
@@ -90,7 +75,8 @@ def calculate_results(distance_km: float) -> list:
                 "time_min": time_min,
                 "cost_inr": cost_inr,
                 "co2_kg": co2_kg,
-                "eco_score": dynamic_score,
+                # Start with a base score scaled down heavily (max ~40 points for being perfectly green)
+                "eco_score": float(data["eco_score"]) * 0.4,
                 "is_best_time": False,
                 "is_best_cost": False,
                 "is_best_co2": False,
@@ -98,21 +84,41 @@ def calculate_results(distance_km: float) -> list:
             }
         )
 
-    # Find the minimums to highlight them
+    # Find the minimums to determine who wins the bonus points
     min_time = min(r["time_min"] for r in results)
     min_cost = min(r["cost_inr"] for r in results)
     min_co2 = min(r["co2_kg"] for r in results)
     
-    # Mark the highlights
+    # Award competitive points!
     for r in results:
+        # Time bonus (20 max points relative to how close to the fastest they are)
         if r["time_min"] == min_time:
             r["is_best_time"] = True
+            r["eco_score"] += 20
+        elif r["time_min"] <= min_time * 1.5: # Close second gets some points
+            r["eco_score"] += 10
+            
+        # Cost bonus (20 max points)
         if r["cost_inr"] == min_cost:
             r["is_best_cost"] = True
+            r["eco_score"] += 20
+        elif r["cost_inr"] <= min_cost + 10: # Almost free gets points
+            r["eco_score"] += 10
+            
+        # Carbon bonus (20 max points)
         if r["co2_kg"] == min_co2:
             r["is_best_co2"] = True
+            r["eco_score"] += 20
+            
+        # Distance-specific realistic penalties
+        if r["time_min"] > 180 and r["transport_mode"] in ["walk", "cycle"]:
+            # Literally impossible to walk 100km effectively for daily transit
+            r["eco_score"] -= 50
+            
+        # Normalize score to 1-100 gauge
+        r["eco_score"] = max(1, min(100, int(r["eco_score"])))
 
-    # Sort by dynamic eco_score descending
+    # Sort by dynamic eco_score descending to find the absolute winner
     results.sort(key=lambda x: x["eco_score"], reverse=True)
     
     # Mark the absolute best overall

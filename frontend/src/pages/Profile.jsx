@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { User, Mail, Leaf, Save, Edit2, CheckCircle } from 'lucide-react'
 import api from '../api/axios'
 import { useUser } from '../context/UserContext'
+import toast from 'react-hot-toast'
 
 export default function Profile() {
   const { user, updateUser } = useUser()
@@ -9,7 +10,6 @@ export default function Profile() {
   const [editName, setEditName] = useState('')
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     api.get('/profile/me')
@@ -29,9 +29,9 @@ export default function Profile() {
       setProfileData((prev) => ({ ...prev, name: data.name }))
       updateUser({ name: data.name })
       setEditing(false)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+      toast.success('Profile updated successfully!')
     } catch (err) {
+      toast.error('Failed to update profile.')
       console.error(err)
     } finally {
       setSaving(false)
@@ -134,14 +134,6 @@ export default function Profile() {
               </div>
             </div>
           </div>
-
-          {/* Saved Confirmation */}
-          {saved && (
-            <div className="mt-4 flex items-center gap-2 text-green-600 text-sm font-medium bg-green-50 rounded-xl px-4 py-2.5 border border-green-200">
-              <CheckCircle className="w-4 h-4" />
-              Profile updated successfully!
-            </div>
-          )}
         </div>
       </div>
     </main>

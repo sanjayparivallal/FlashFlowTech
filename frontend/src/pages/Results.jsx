@@ -5,6 +5,7 @@ import TransportCard from '../components/TransportCard'
 import GreenCredits from '../components/GreenCredits'
 import api from '../api/axios'
 import { useUser } from '../context/UserContext'
+import toast from 'react-hot-toast'
 
 export default function Results() {
   const { state } = useLocation()
@@ -33,12 +34,15 @@ export default function Results() {
         destination,
         transport_mode: option.transport_mode,
         distance_km: option.distance_km,
-        // cost, time, CO2, eco_score are recalculated server-side from transport.py
       })
       setSelectedOption(option)
       setGreenData(data)
       updateUser({ green_points: data.total_green_points })
+      toast.success(`Trip saved! You earned ${data.points_earned} green points.`, {
+        icon: '🌱',
+      })
     } catch (err) {
+      toast.error('Failed to save trip. Please try again.')
       console.error(err)
     } finally {
       setLoading(false)

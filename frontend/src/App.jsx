@@ -9,6 +9,8 @@ import Profile from './pages/Profile'
 import Signin from './pages/Signin'
 import Signup from './pages/Signup'
 
+import { Toaster } from 'react-hot-toast'
+
 // Shows a spinner while restoring auth from localStorage
 function AppLoader({ children }) {
   const { loading } = useUser()
@@ -55,6 +57,7 @@ export default function App() {
   return (
     <UserProvider>
       <BrowserRouter>
+        <Toaster position="top-center" />
         <AppLoader>
           <Layout />
         </AppLoader>

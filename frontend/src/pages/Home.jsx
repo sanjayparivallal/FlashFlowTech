@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, MapPin, Clock, Leaf } from 'lucide-react'
 import api from '../api/axios'
+import toast from 'react-hot-toast'
 
 export default function Home() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ source: '', destination: '', distance_km: '' })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -16,10 +16,9 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.source || !form.destination || !form.distance_km) {
-      setError('Please fill in all fields.')
+      toast.error('Please fill in all fields.')
       return
     }
-    setError('')
     setLoading(true)
     try {
       const { data } = await api.post('/trips/compare', {
@@ -29,7 +28,7 @@ export default function Home() {
       })
       navigate('/results', { state: data })
     } catch (err) {
-      setError('Failed to compare trips. Make sure the backend is running.')
+      toast.error('Failed to compare trips.')
     } finally {
       setLoading(false)
     }
@@ -100,9 +99,6 @@ export default function Home() {
             />
           </div>
 
-          {error && (
-            <p className="text-red-500 text-xs font-medium">{error}</p>
-          )}
 
           <button
             id="search-btn"
