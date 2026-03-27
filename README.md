@@ -1,20 +1,87 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Flash Flow Tech 🌿
 
-# Run and deploy your AI Studio app
+A sustainable transportation comparison platform. Compare 8 transport modes and earn green credits for eco-friendly choices.
 
-This contains everything you need to run your app locally.
+## Project Structure
 
-View your app in AI Studio: https://ai.studio/apps/97ef8820-b774-48da-b065-e0425e1dd05e
+```
+FlashFlowTech/
+├── frontend/          # React (Vite + Tailwind CSS + Recharts)
+│   ├── src/
+│   │   ├── api/           # Axios instance
+│   │   ├── components/    # Navbar, TransportCard, GreenCredits
+│   │   ├── context/       # UserContext (mock user)
+│   │   └── pages/         # Home, Results, History, Dashboard, Profile
+│   ├── package.json
+│   └── vite.config.js
+│
+└── backend/           # FastAPI + MongoDB (Motor)
+    ├── routers/       # trips.py, dashboard.py, profile.py
+    ├── models/        # trip.py (Pydantic)
+    ├── db/            # mongo.py (Motor client)
+    ├── utils/         # transport.py (calculation engine)
+    ├── main.py
+    └── requirements.txt
+```
 
-## Run Locally
+## Tech Stack
 
-**Prerequisites:**  Node.js
+| Layer     | Technology                                   |
+|-----------|----------------------------------------------|
+| Frontend  | React 18, Vite, Tailwind CSS v3, React Router v6, Recharts, Axios |
+| Backend   | FastAPI, Python 3.11+, Uvicorn               |
+| Database  | MongoDB (localhost:27017), Motor async driver |
 
+## Prerequisites
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- **Node.js** v18+ and npm
+- **Python** 3.11+
+- **MongoDB** running locally on `localhost:27017`
+
+## Getting Started
+
+### 1. Start MongoDB
+
+Make sure MongoDB is running on `localhost:27017`.
+
+### 2. Start Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Backend runs on **http://localhost:8000**  
+API docs: **http://localhost:8000/docs**
+
+> On first start, the mock user `sanjay@flashflowtech.com` is automatically seeded.
+
+### 3. Start Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend runs on **http://localhost:5173**
+
+## API Endpoints
+
+| Method | Endpoint           | Description                    |
+|--------|--------------------|--------------------------------|
+| POST   | /trips/compare     | Compare 8 transport options    |
+| POST   | /trips/select      | Save trip & award green points |
+| GET    | /trips/history     | Trip history for mock user     |
+| GET    | /dashboard/stats   | Aggregated stats + chart data  |
+| GET    | /profile/me        | Get mock user profile          |
+| PUT    | /profile/update    | Update user name               |
+
+## Mock User
+
+No authentication required. The app uses a hardcoded mock user:
+- **ID:** `mock_user_001`
+- **Name:** Sanjay
+- **Email:** sanjay@flashflowtech.com
+- **Starting Points:** 340
