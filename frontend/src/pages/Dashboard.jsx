@@ -117,7 +117,7 @@ export default function Dashboard() {
             {usage_chart.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-slate-300 text-sm">No data yet</div>
             ) : (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
                     data={usage_chart}
@@ -125,15 +125,31 @@ export default function Dashboard() {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    innerRadius={70}
+                    outerRadius={110}
+                    paddingAngle={2}
+                    labelLine={false}
+                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                      if (percent < 0.05) return null; // Hide label if segment is too small to avoid overlap
+                      const RADIAN = Math.PI / 180;
+                      const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                      const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                      const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                      return (
+                        <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="bold">
+                          {(percent * 100).toFixed(0)}%
+                        </text>
+                      );
+                    }}
                   >
                     {usage_chart.map((_, idx) => (
-                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} stroke="rgba(255,255,255,0.5)" strokeWidth={2} />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '13px', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
