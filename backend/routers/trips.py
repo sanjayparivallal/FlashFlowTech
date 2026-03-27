@@ -75,13 +75,16 @@ async def trip_history(current_user: dict = Depends(get_current_user)):
         
         # Calculate on the fly (never stored in DB)
         if data:
-            trip["time_min"] = round((dist / data["speed_kmh"]) * 60, 1)
+            time_m = round((dist / data["speed_kmh"]) * 60, 1)
+            trip["time_min"] = time_m
             trip["cost_inr"] = round(dist * data["cost_per_km"], 2)
             trip["co2_kg"] = round(dist * data["emission_per_km"], 3)
+            trip["calories"] = round((time_m / 60) * data.get("calories_per_h", 0))
+            trip["comfort"] = data.get("comfort_rating", 0)
             trip["eco_score"] = data["eco_score"]
             trip["points_earned"] = data["eco_score"] // 10
         else:
-            trip["time_min"] = trip["cost_inr"] = trip["co2_kg"] = trip["eco_score"] = trip["points_earned"] = 0
+            trip["time_min"] = trip["cost_inr"] = trip["co2_kg"] = trip["calories"] = trip["comfort"] = trip["eco_score"] = trip["points_earned"] = 0
             
         trip["created_at"] = trip["created_at"].isoformat()
         trips.append(trip)

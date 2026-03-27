@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Clock, Leaf, Zap } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Clock, Leaf, Zap, RefreshCw } from 'lucide-react'
 import api from '../api/axios'
 
 export default function History() {
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
+  const [comparingId, setComparingId] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     api.get('/trips/history')
@@ -12,6 +15,22 @@ export default function History() {
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
+
+  const handleCompareAgain = async (trip, index) => {
+    setComparingId(index)
+    try {
+      const { data } = await api.post('/trips/compare', {
+        source: trip.source,
+        destination: trip.destination,
+        distance_km: trip.distance_km,
+      })
+      navigate('/results', { state: data })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setComparingId(null)
+    }
+  }
 
   const formatMode = (mode) =>
     mode.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
@@ -46,9 +65,9 @@ export default function History() {
                     <th className="text-left px-6 py-4 font-semibold text-slate-600">Route</th>
                     <th className="text-left px-6 py-4 font-semibold text-slate-600">Transport</th>
                     <th className="text-left px-6 py-4 font-semibold text-slate-600">Distance</th>
-                    <th className="text-left px-6 py-4 font-semibold text-slate-600">CO₂</th>
-                    <th className="text-left px-6 py-4 font-semibold text-slate-600">Points</th>
+                    <th className="text-left px-6 py-4 font-semibold text-slate-600">CO₂ / Points</th>
                     <th className="text-left px-6 py-4 font-semibold text-slate-600">Date</th>
+                    <th className="text-right px-6 py-4 font-semibold text-slate-600">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -75,21 +94,30 @@ export default function History() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs font-semibold ${trip.co2_kg === 0 ? 'text-green-600' : 'text-orange-500'}`}>
-                          {trip.co2_kg} kg
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 text-green-600 font-semibold">
-                          <Leaf className="w-3.5 h-3.5" />
-                          +{trip.points_earned}
+                        <div className="flex flex-col gap-1.5">
+                          <span className={`text-xs font-bold ${trip.co2_kg === 0 ? 'text-green-600' : 'text-slate-600'}`}>
+                            {trip.co2_kg} kg CO₂
+                          </span>
+                          <span className="text-xs font-bold text-green-600 flex items-center gap-1">
+                            <Leaf className="w-3 h-3" /> +{trip.points_earned} pts
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 text-slate-500">
+                        <div className="flex items-center gap-1.5 text-slate-500 text-xs font-medium">
                           <Clock className="w-3.5 h-3.5" />
                           {formatDate(trip.created_at)}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleCompareAgain(trip, i)}
+                          disabled={comparingId === i}
+                          className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${comparingId === i ? 'animate-spin' : ''}`} />
+                          {comparingId === i ? 'Loading...' : 'Compare Again'}
+                        </button>
                       </td>
                     </tr>
                   ))}
